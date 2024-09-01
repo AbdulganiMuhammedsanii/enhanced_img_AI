@@ -11,33 +11,107 @@ import {
   IconButton,
   Grid,
   Box,
-  Slider,
   CardMedia,
 } from "@mui/material";
 import { Instagram, Facebook, Twitter } from "@mui/icons-material";
-import {useRouter} from 'next/navigation';
-// Image array
-const imageSources = [
-  "/replicate(1).jpg",
-  "/replicate(2).jpg",
-  "/replicate(3).jpg",
-  "/replicate(4).jpg",
-];
 
 export default function Home() {
-  const [sliderValue, setSliderValue] = useState(50); // Initial slider position
-  const router = useRouter(); // Initialize useRouter
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [processedImageUrl, setProcessedImageUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const originalImageUrl =
-    "https://replicate.delivery/mgxm/7534e8f1-ee01-4d66-ae40-36343e5eb44a/003.png"; // Original image
-  const processedImageUrl =
-    "images/output.png"; // Processed image
-
-  const handleSliderChange = (e, newValue) => {
-    setSliderValue(newValue);
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setUploadedImage(URL.createObjectURL(file));
+      await processImage(file);
+    }
   };
-  const goToGenerate = () => {
-    router.push("/generate");
+
+  const handleFileInputChange = async (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setUploadedImage(URL.createObjectURL(file));
+      await processImage(file);
+    }
+  };
+
+  const processImage = async (file) => {
+    setLoading(true);
+
+    try {
+      // Convert file to base64
+      const base64Image = await fileToBase64(file);
+
+      // Upload the image to Cloudinary via your API route
+      const uploadResponse = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image: base64Image }),
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload image via server");
+      }
+
+      const uploadData = await uploadResponse.json();
+      const publicImageUrl = uploadData.url; // The URL of the uploaded image
+      console.log("Uploaded image to Cloudinary:", publicImageUrl);
+
+      // Send the public URL to your backend to process it with Replicate API
+      const replicateResponse = await fetch("/api/replicate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageUrl: publicImageUrl }),
+      });
+
+      if (!replicateResponse.ok) {
+        throw new Error("Failed to process the image via Replicate API");
+      }
+
+      const replicateData = await replicateResponse.json();
+      console.log("Processed image with Replicate:", replicateData.output);
+
+      setProcessedImageUrl(replicateData.output); // Set the processed image URL
+    } catch (error) {
+      console.error("Error:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(processedImageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "processed-image.png";
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up and remove the link
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download image:", error);
+    }
   };
 
   return (
@@ -92,85 +166,78 @@ export default function Home() {
                 gutterBottom
                 sx={{ fontWeight: "bold", color: "#333" }}
               >
-                Recover Moments with Precision
+                Image Recovery with AI
               </Typography>
               <Typography
                 variant="body1"
                 paragraph
                 sx={{ color: "#666", mb: 4 }}
               >
-                Recover your lost moments into lasting art with our expert studio
-                photography services, where precision meets creativity to
-                deliver exceptional, high-quality images that speak volumes.
+                Drop an image here, and our AI will enhance it for you.
               </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
+
+              <Box
                 sx={{
-                  px: 10,
-                  py: 0.75,
-                  borderRadius: 10,
-                  backgroundColor: "black",
-                  "&:hover": { backgroundColor: "#848080" },
+                  border: "2px dashed #2B2D42",
+                  borderRadius: 4,
+                  p: 4,
+                  textAlign: "center",
+                  backgroundColor: "#f9f9f9",
+                  cursor: "pointer",
                 }}
-                onClick={goToGenerate}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById("fileInput").click()}
               >
-                TRY IT OUT
-              </Button>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ position: "relative", height: "520px", overflow: "hidden" }}>
-                <Box sx={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}>
+                {uploadedImage ? (
                   <img
-                    src={originalImageUrl}
-                    alt="Original"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    src={uploadedImage}
+                    alt="Uploaded"
+                    style={{ maxWidth: "100%" }}
                   />
-                  <img
-                    src={processedImageUrl}
-                    alt="Processed"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      clipPath: `inset(0 ${100 - sliderValue}% 0 0)`,
-                      transition: "clip-path 0.1s ease-out",
-                    }}
-                  />
-                </Box>
+                ) : (
+                  "Drag & drop an image here, or click to select a file"
+                )}
               </Box>
-              <Slider
-                value={sliderValue}
-                onChange={handleSliderChange}
-                aria-labelledby="continuous-slider"
-                sx={{
-                  mt: 3, // Add margin from the image
-                  width: "100%",
-                  zIndex: 10,
-                  color: "primary.main",
-                  "& .MuiSlider-thumb": {
-                    backgroundColor: "#2B2D42", // Dark thumb to match the dark theme
-                    border: "2px solid white", // White border to make the thumb stand out
-                    width: 16,
-                    height: 16,
-                  },
-                  "& .MuiSlider-track": {
-                    backgroundColor: "#2B2D42", // Dark track color
-                    height: 4, // Slim track
-                  },
-                  "& .MuiSlider-rail": {
-                    backgroundColor: "lightgray", // Lighter gray rail for contrast
-                    height: 4, // Slim rail
-                  },
-                  "& .MuiSlider-thumb:hover, & .MuiSlider-thumb.Mui-focusVisible": {
-                    boxShadow: "0px 0px 0px 8px rgba(255, 255, 255, 0.16)", // Subtle white glow on hover/focus
-                  },
-                }}
+
+              <input
+                type="file"
+                id="fileInput"
+                style={{ display: "none" }}
+                onChange={handleFileInputChange}
+                accept="image/*"
               />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              {loading ? (
+                <Typography variant="h5" color="primary">
+                  Processing...
+                </Typography>
+              ) : (
+                processedImageUrl && (
+                  <Box>
+                    <Card elevation={8}>
+                      <CardMedia
+                        component="img"
+                        height="520"
+                        image={processedImageUrl}
+                        alt="Processed Image"
+                        sx={{ objectFit: "cover" }}
+                      />
+                    </Card>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                      <Button
+                        variant="contained"
+                        color="#2B2D42"
+                        onClick={handleDownload}
+                      >
+                        Download Processed Image
+                      </Button>
+                    </Box>
+                  </Box>
+                )
+              )}
             </Grid>
           </Grid>
         </Container>
@@ -267,22 +334,6 @@ export default function Home() {
               <Facebook />
             </IconButton>
           </Box>
-
-          <Grid container spacing={3}>
-            {imageSources.map((src, index) => (
-              <Grid item xs={6} md={3} key={index}>
-                <Card elevation={4}>
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={src}
-                    alt={`Photography sample ${index + 1}`}
-                    sx={{ objectFit: "cover" }}
-                  />
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
         </Container>
       </Box>
     </Box>
