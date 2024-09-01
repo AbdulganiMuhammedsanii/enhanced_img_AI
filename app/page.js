@@ -4,13 +4,17 @@ import {
   Toolbar,
   Typography,
   Container,
-  Grid,
   Button,
   Card,
   CardMedia,
   TextField,
   IconButton,
+  Grid,
 } from '@mui/material';
+
+// import Grid from '@mui/material/Unstable_Grid2';
+
+
 import { Instagram, Facebook, Twitter } from '@mui/icons-material';
 
 export default function Home() {
@@ -89,18 +93,18 @@ export default function Home() {
       <Typography variant="h4" align="center" style={{ margin: '4rem 0 2rem' }}>
         Join our community
       </Typography>
-      <Grid container justifyContent="center" spacing={2}>
-        <Grid item>
+      <Grid display="flex" justifyContent="center" spacing={2}>
+        <Grid>
           <IconButton>
             <Instagram />
           </IconButton>
         </Grid>
-        <Grid item>
+        <Grid>
           <IconButton>
             <Twitter />
           </IconButton>
         </Grid>
-        <Grid item>
+        <Grid>
           <IconButton>
             <Facebook />
           </IconButton>
@@ -118,10 +122,10 @@ export default function Home() {
                 alt={`Photography sample ${item}`}
               />
             </Card>
-          </Grid>
+          </Grid> // Changed from <Grid> to <Grid>
         ))}
       </Grid>
-    </Container>
-    </div>
+      </Container>
+      </div>
   );
 }
