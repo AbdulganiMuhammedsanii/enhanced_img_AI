@@ -85,7 +85,7 @@ export default function About() {
         },
       }}
     >
-      Sign In
+      Sign In/Up
     </Button>
   </SignInButton>
 </SignedOut>

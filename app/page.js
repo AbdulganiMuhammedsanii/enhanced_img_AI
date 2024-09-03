@@ -117,7 +117,7 @@ const processedImageUrl =
         },
       }}
     >
-      Sign In
+      Sign In/Up
     </Button>
   </SignInButton>
 </SignedOut>
@@ -154,9 +154,7 @@ const processedImageUrl =
                 paragraph
                 sx={{ color: "#666", mb: 4 }}
               >
-                Recover your lost moments into lasting art with our expert studio
-                photography services, where precision meets creativity to
-                deliver exceptional, high-quality images that speak volumes.
+                Rediscover your cherished moments with cutting-edge AI models designed to transform and elevate your photography, merging advanced technology with creativity to produce stunning, high-quality images that truly capture the essence of each moment.
               </Typography>
               <Button
                 variant="contained"

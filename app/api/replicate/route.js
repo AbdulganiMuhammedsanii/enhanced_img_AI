@@ -4,17 +4,20 @@ export async function POST(req) {
   const replicate = new Replicate();
 
   try {
-    const { imageUrl } = await req.json(); // Extract the imageUrl from the request body
+    const { imgCurr } = await req.json(); // Extract the imageUrl from the request body
     
     // Log the specific parts of the request
     console.log("Request method:", req.method);
     console.log("Request headers:", req.headers);
-    console.log("Received POST request with imageUrl:", imageUrl);
+    console.log("Received POST request with imageUrl:", imgCurr);
 
     // Call the Replicate API with the image URL
+    const input = {
+      img: imgCurr,
+  };
     const output = await replicate.run(
-      "sczhou/codeformer:7de2ea26c616d5bf2245ad0d5e24f0ff9a6204578a5c876db53142edd9d2cd56",
-      { input: { image: imageUrl, codeformer_fidelity: 0.1 } } // Ensure this is a number
+      "tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
+      { input } // Ensure this is a number
     );
 
     console.log("Replicate API output:", output);

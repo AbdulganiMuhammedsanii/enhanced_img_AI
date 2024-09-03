@@ -116,7 +116,7 @@ export default function Services() {
         },
       }}
     >
-      Sign In
+      Sign In/Up
     </Button>
   </SignInButton>
 </SignedOut>

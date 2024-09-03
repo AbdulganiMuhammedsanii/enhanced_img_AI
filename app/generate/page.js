@@ -89,7 +89,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ imageUrl: publicImageUrl }),
+        body: JSON.stringify({ imgCurr: publicImageUrl }),
       });
 
       if (!replicateResponse.ok) {
@@ -187,7 +187,7 @@ export default function Home() {
         },
       }}
     >
-      Sign In
+      Sign In/Up
     </Button>
   </SignInButton>
 </SignedOut>
