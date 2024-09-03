@@ -17,39 +17,46 @@ import {
 import { Instagram, Facebook, Twitter } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
+
 export default function About() {
   const router = useRouter();
 
   const goToServices = () => {
     router.push("/services");
   };
+  const goHome = () => {
+    router.push("/");
+  };
 
   return (
     <Box>
-      <AppBar
-        position="static"
-        color="transparent"
-        elevation={4}
-        sx={{ backgroundColor: "#2B2D42" }}
-      >
+      <ClerkProvider>
+      <AppBar position="static" color="primary" elevation={4} sx={{ backgroundColor: "#2B2D42" }}>
         <Toolbar>
           <Typography
+          onClick={goHome}
             variant="h6"
             sx={{
               flexGrow: 1,
               fontWeight: "bold",
               color: "white",
-              "&:hover": { color: "lightgray" },
               cursor: "pointer",
+              "&:hover": { color: "lightgray" },
             }}
-            onClick={() => router.push("/")}
           >
             Recovery AI
           </Typography>
           <Button
+            onClick = {goToServices}
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
-            onClick={goToServices}
           >
             Services
           </Button>
@@ -59,8 +66,43 @@ export default function About() {
           >
             About
           </Button>
+
+          {/* Clerk Authentication UI */}
+          <SignedOut>
+  <SignInButton>
+    <Button
+      color="inherit"
+      sx={{
+        mx: 1,
+        color: "white",
+        border: "1px solid white", // Border for better visibility
+        borderRadius: "20px", // Rounded corners
+        px: 2, // Padding for extra space inside the button
+        textTransform: "none", // Disable uppercase text transformation
+        "&:hover": {
+          color: "#848080", // Slightly darker color on hover
+          borderColor: "#848080", // Match border color on hover
+        },
+      }}
+    >
+      Sign In
+    </Button>
+  </SignInButton>
+</SignedOut>
+
+          <SignedIn>
+            <UserButton
+              afterSignOutUrl="/"
+              sx={{
+                mx: 1,
+                color: "white",
+                "&:hover": { color: "lightgray" },
+              }}
+            />
+          </SignedIn>
         </Toolbar>
       </AppBar>
+    </ClerkProvider>
 
       {/* Hero Section */}
       <Box
