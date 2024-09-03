@@ -28,7 +28,7 @@ export default function Home() {
   const [sliderValue, setSliderValue] = useState(20);
   const router = useRouter();
   const [displayedText, setDisplayedText] = useState("");
-  const fullText = "Reecover Moments with Precision ";
+  const fullText = "Recover Moments with Precision ";
   const imageSources = [ "/replicate(1).jpg", "/replicate(2).jpg", "/replicate(3).jpg", "/replicate(4).jpg", ];
 
   const originalImageUrl =
@@ -38,10 +38,8 @@ const processedImageUrl =
 
   useEffect(() => {
     let currentIndex = 0;
-    
     const intervalId = setInterval(() => {
-      // Ensure we are within bounds before updating the state
-      if (currentIndex < fullText.length-1) {
+      if (currentIndex < fullText.length - 1) {
         setDisplayedText((prev) => prev + fullText[currentIndex]);
         currentIndex += 1;
       } else {
@@ -149,7 +147,7 @@ const processedImageUrl =
                 gutterBottom
                 sx={{ fontWeight: "bold", color: "#333" }}
               >
-                {displayedText}
+                {fullText}
               </Typography>
               <Typography
                 variant="body1"

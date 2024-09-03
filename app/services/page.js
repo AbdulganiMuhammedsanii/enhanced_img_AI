@@ -150,8 +150,7 @@ export default function Services() {
             variant="body1"
             sx={{ color: "#666", mb: 4, textAlign: "center" }}
           >
-            Select the best plan that suits your needs. Start with a 7-day free
-            trial or jump straight to our premium plan for advanced features.
+            Select the best plan that suits your needs. High Quality Results in an accessible format.
           </Typography>
           <Grid container spacing={4} justifyContent="center">
             <Grid item xs={12} md={4}>
@@ -165,17 +164,7 @@ export default function Services() {
                       textAlign: "center",
                     }}
                   >
-                    Basic Plan
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: "bold",
-                      color: "#333",
-                      textAlign: "center",
-                    }}
-                  >
-                    7 Day Free Trial
+                    Basic Bundle
                   </Typography>
                   <Typography
                     variant="h4"
@@ -186,13 +175,13 @@ export default function Services() {
                       mt: 2,
                     }}
                   >
-                    $5/month
+                    $5
                   </Typography>
                   <Typography
                     variant="body1"
                     sx={{ color: "#666", textAlign: "center", mt: 2 }}
                   >
-                    100 image generations a month
+                    Up to 50 image generations in a compressed folder
 
                   </Typography>
                   <Button
@@ -209,7 +198,7 @@ export default function Services() {
                       createCheckoutSession("price_1Puni2L4uTCp4HsU5Yy8NzLr")
                     }
                   >
-                    Choose Basic
+                    Choose Basic Bundle
                   </Button>
                 </CardContent>
               </Card>
@@ -225,7 +214,7 @@ export default function Services() {
                       textAlign: "center",
                     }}
                   >
-                    Premium Plan
+                    Premium Bundle
                   </Typography>
                   <Typography
                     variant="h4"
@@ -236,19 +225,13 @@ export default function Services() {
                       mt: 2,
                     }}
                   >
-                    $15/month
+                    $15
                   </Typography>
                   <Typography
                     variant="body1"
                     sx={{ color: "#666", textAlign: "center", mt: 2 }}
                   >
-                    Access to all features
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{ color: "#666", textAlign: "center", mt: 2 }}
-                  >
-                    unlimited image generations
+                    Up to 250 image generations in a compressed folder
 
                   </Typography>
                   <Button
@@ -265,7 +248,7 @@ export default function Services() {
                       createCheckoutSession("price_1PuoF1L4uTCp4HsUVdi0CUv0")
                     }
                   >
-                    Choose Premium
+                    Choose Premium Bundle
                   </Button>
                 </CardContent>
               </Card>
