@@ -4,9 +4,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const { priceId } = await req.json();
+    const { priceId, referrer } = await req.json();  // Add referrer to the body
 
-    // Create a new checkout session with Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -16,8 +15,8 @@ export async function POST(req) {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.origin}/canceled`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: referrer || `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`, // Use the referrer if provided
     });
 
     return new Response(JSON.stringify({ id: session.id }), {

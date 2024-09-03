@@ -1,43 +1,61 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
   Typography,
   Container,
   Button,
-  Card,
-  TextField,
   IconButton,
   Grid,
   Box,
   Slider,
+  Card,
   CardMedia,
+  TextField
 } from "@mui/material";
 import { Instagram, Facebook, Twitter } from "@mui/icons-material";
-import {useRouter} from 'next/navigation';
-// Image array
-const imageSources = [
-  "/replicate(1).jpg",
-  "/replicate(2).jpg",
-  "/replicate(3).jpg",
-  "/replicate(4).jpg",
-];
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [sliderValue, setSliderValue] = useState(50); // Initial slider position
-  const router = useRouter(); // Initialize useRouter
+  const [sliderValue, setSliderValue] = useState(20);
+  const router = useRouter();
+  const [displayedText, setDisplayedText] = useState("");
+  const fullText = "Reecover Moments with Precision ";
+  const imageSources = [ "/replicate(1).jpg", "/replicate(2).jpg", "/replicate(3).jpg", "/replicate(4).jpg", ];
 
   const originalImageUrl =
-    "https://replicate.delivery/mgxm/7534e8f1-ee01-4d66-ae40-36343e5eb44a/003.png"; // Original image
-  const processedImageUrl =
-    "images/output.png"; // Processed image
+  "images/couple.jpg"; // Original image
+const processedImageUrl =
+  "images/couple2.png"; // Processed image
+
+  useEffect(() => {
+    let currentIndex = 0;
+    
+    const intervalId = setInterval(() => {
+      // Ensure we are within bounds before updating the state
+      if (currentIndex < fullText.length-1) {
+        setDisplayedText((prev) => prev + fullText[currentIndex]);
+        currentIndex += 1;
+      } else {
+        clearInterval(intervalId);
+      }
+    }, 70);
+  
+    return () => clearInterval(intervalId);
+  }, [fullText]);
+  
 
   const handleSliderChange = (e, newValue) => {
     setSliderValue(newValue);
   };
+
   const goToGenerate = () => {
     router.push("/generate");
+  };
+
+  const goToAbout = () => {
+    router.push("/about");
   };
 
   const goToServices = () => {
@@ -60,28 +78,27 @@ export default function Home() {
               fontWeight: "bold",
               color: "white",
               "&:hover": { color: "lightgray" },
+              cursor: "pointer",
             }}
+            onClick={() => router.push("/")}
           >
             Recovery AI
           </Typography>
           <Button
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
-            onClick={goToServices}>
+            onClick={goToServices}
+          >
             Services
           </Button>
           <Button
+            onClick={goToAbout}
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
           >
             About
           </Button>
-          <Button
-            color="inherit"
-            sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
-          >
-            Contact
-          </Button>
+
         </Toolbar>
       </AppBar>
 
@@ -96,7 +113,7 @@ export default function Home() {
                 gutterBottom
                 sx={{ fontWeight: "bold", color: "#333" }}
               >
-                Recover Moments with Precision
+                {displayedText}
               </Typography>
               <Typography
                 variant="body1"
@@ -152,26 +169,26 @@ export default function Home() {
                 onChange={handleSliderChange}
                 aria-labelledby="continuous-slider"
                 sx={{
-                  mt: 3, // Add margin from the image
+                  mt: 3,
                   width: "100%",
                   zIndex: 10,
                   color: "primary.main",
                   "& .MuiSlider-thumb": {
-                    backgroundColor: "#2B2D42", // Dark thumb to match the dark theme
-                    border: "2px solid white", // White border to make the thumb stand out
+                    backgroundColor: "#2B2D42",
+                    border: "2px solid white",
                     width: 16,
                     height: 16,
                   },
                   "& .MuiSlider-track": {
-                    backgroundColor: "#2B2D42", // Dark track color
-                    height: 4, // Slim track
+                    backgroundColor: "#2B2D42",
+                    height: 4,
                   },
                   "& .MuiSlider-rail": {
-                    backgroundColor: "lightgray", // Lighter gray rail for contrast
-                    height: 4, // Slim rail
+                    backgroundColor: "lightgray",
+                    height: 4,
                   },
                   "& .MuiSlider-thumb:hover, & .MuiSlider-thumb.Mui-focusVisible": {
-                    boxShadow: "0px 0px 0px 8px rgba(255, 255, 255, 0.16)", // Subtle white glow on hover/focus
+                    boxShadow: "0px 0px 0px 8px rgba(255, 255, 255, 0.16)",
                   },
                 }}
               />
@@ -189,7 +206,7 @@ export default function Home() {
                 <CardMedia
                   component="img"
                   height="520"
-                  image="/repl.png"
+                  image="/images/child_portrait.jpg"
                   alt="Product Photography"
                   sx={{ objectFit: "cover" }}
                 />

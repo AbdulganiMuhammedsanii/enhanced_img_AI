@@ -1,11 +1,16 @@
-// utils/get-stripe.js
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from "@stripe/stripe-js";
 
 let stripePromise;
 
 const getStripe = () => {
+  console.log("yoo")
   if (!stripePromise) {
-    stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
+    console.log("yoeeo")
+    const apiKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (!apiKey) {
+      throw new Error("Stripe public key is not set in the environment variables.");
+    }
+    stripePromise = loadStripe(apiKey);
   }
   return stripePromise;
 };

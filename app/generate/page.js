@@ -14,11 +14,25 @@ import {
   CardMedia,
 } from "@mui/material";
 import { Instagram, Facebook, Twitter } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [uploadedImage, setUploadedImage] = useState(null);
   const [processedImageUrl, setProcessedImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const goHome = () => {
+    router.push("/");
+  };
+
+  const goServices = () => {
+    router.push("/services");
+  };
+
+  const goAbout = () => {
+    router.push("/about");
+  };
 
   const handleDrop = async (e) => {
     e.preventDefault();
@@ -124,6 +138,7 @@ export default function Home() {
       >
         <Toolbar>
           <Typography
+            onClick={goHome}
             variant="h6"
             sx={{
               flexGrow: 1,
@@ -137,20 +152,16 @@ export default function Home() {
           <Button
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
+            onClick={goServices}
           >
             Services
           </Button>
           <Button
+            onClick={goAbout}
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
           >
             About
-          </Button>
-          <Button
-            color="inherit"
-            sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
-          >
-            Contact
           </Button>
         </Toolbar>
       </AppBar>
@@ -252,7 +263,7 @@ export default function Home() {
                 <CardMedia
                   component="img"
                   height="520"
-                  image="/repl.png"
+                  image="/images/child_portrait.jpg"
                   alt="Product Photography"
                   sx={{ objectFit: "cover" }}
                 />
