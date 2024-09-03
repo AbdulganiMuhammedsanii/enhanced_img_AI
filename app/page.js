@@ -40,6 +40,10 @@ export default function Home() {
     router.push("/generate");
   };
 
+  const goToServices = () => {
+    router.push("/services");
+  };
+
   return (
     <Box>
       <AppBar
@@ -63,7 +67,7 @@ export default function Home() {
           <Button
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
-          >
+            onClick={goToServices}>
             Services
           </Button>
           <Button
