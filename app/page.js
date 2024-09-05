@@ -22,14 +22,17 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
+  useUser,
 } from "@clerk/nextjs";
 
 export default function Home() {
   const [sliderValue, setSliderValue] = useState(20);
+  const { isLoaded, isSignedIn, user } = useUser(); // Fetch user details
   const router = useRouter();
   const [displayedText, setDisplayedText] = useState("");
   const fullText = "Recover Moments with Precision ";
   const imageSources = [ "/replicate(1).jpg", "/replicate(2).jpg", "/replicate(3).jpg", "/replicate(4).jpg", ];
+  const [hasPremiumAccess, setHasPremiumAccess] = useState(false); // Initialize the state
 
   const originalImageUrl =
   "images/couple.jpg"; // Original image
@@ -49,7 +52,40 @@ const processedImageUrl =
   
     return () => clearInterval(intervalId);
   }, [fullText]);
+
+
   
+  const checkPremiumStatus = async (userId) => {
+    try {
+      const response = await fetch("/api/check-premium-status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),  // Send the user ID
+      });
+
+      const data = await response.json();
+      setHasPremiumAccess(data.hasPremiumAccess); // Update the state with the response
+    } catch (error) {
+      console.error("Error checking premium status:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user?.id) {
+      checkPremiumStatus(user.id); // Call the API when the user is signed in
+    }
+  }, [isLoaded, isSignedIn, user]);
+  
+  
+  const goPremiumPage = () => {
+    if (hasPremiumAccess) {
+      router.push("/generatepremium");
+    } else {
+      router.push("/services");
+    }
+  };
 
   const handleSliderChange = (e, newValue) => {
     setSliderValue(newValue);
@@ -69,7 +105,6 @@ const processedImageUrl =
 
   return (
     <Box>
-      <ClerkProvider>
       <AppBar position="static" color="primary" elevation={4} sx={{ backgroundColor: "#2B2D42" }}>
         <Toolbar>
           <Typography
@@ -84,6 +119,15 @@ const processedImageUrl =
           >
             Recovery AI
           </Typography>
+          {isSignedIn && (
+            <Button
+              color="inherit"
+              sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
+              onClick={goPremiumPage}
+            >
+              Generate Premium
+            </Button>
+          )}
           <Button
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
@@ -134,7 +178,6 @@ const processedImageUrl =
           </SignedIn>
         </Toolbar>
       </AppBar>
-    </ClerkProvider>
 
       {/* First section - White background */}
       <Box sx={{ backgroundColor: "white", py: 8 }}>

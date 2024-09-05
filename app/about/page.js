@@ -23,9 +23,13 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
+  useUser,
 } from "@clerk/nextjs";
 
 export default function About() {
+  const { isLoaded, isSignedIn, user } = useUser(); // Fetch user details
+  const hasPremiumAccess = user?.publicMetadata?.hasPremiumAccess; // Check if the user has premium access
+
   const router = useRouter();
 
   const goToServices = () => {
@@ -35,9 +39,16 @@ export default function About() {
     router.push("/");
   };
 
+  const goPremiumPage = () => {
+    if (hasPremiumAccess) {
+      router.push("/premium/generate");
+    } else {
+      router.push("/services");
+    }
+  };
+
   return (
     <Box>
-      <ClerkProvider>
       <AppBar position="static" color="primary" elevation={4} sx={{ backgroundColor: "#2B2D42" }}>
         <Toolbar>
           <Typography
@@ -53,6 +64,15 @@ export default function About() {
           >
             Recovery AI
           </Typography>
+          {isSignedIn && (
+            <Button
+              color="inherit"
+              sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
+              onClick={goPremiumPage}
+            >
+              Generate Premium
+            </Button>
+          )}
           <Button
             onClick = {goToServices}
             color="inherit"
@@ -102,7 +122,6 @@ export default function About() {
           </SignedIn>
         </Toolbar>
       </AppBar>
-    </ClerkProvider>
 
       {/* Hero Section */}
       <Box

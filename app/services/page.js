@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -23,17 +23,45 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
+  useUser,  
 } from "@clerk/nextjs";
 
 export default function Services() {
   const router = useRouter();
+  const { isLoaded, isSignedIn, user } = useUser(); // Fetch user details
+  const [hasPremiumAccess, setHasPremiumAccess] = useState(false); // Initialize the state
+
 
   const goHome = () => {
     router.push("/");
   };
-
+  const checkPremiumStatus = async (userId) => {
+    try {
+      const response = await fetch("/api/check-premium-status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),  // Send the user ID
+      });
+  
+      const data = await response.json();
+      setHasPremiumAccess(data.hasPremiumAccess); // Update the state with the response
+    } catch (error) {
+      console.error("Error checking premium status:", error);
+    }
+  };
+  
   const goAbout = () => {
     router.push("/about");
+  };
+
+  const goPremiumPage = () => {
+    if (hasPremiumAccess) {
+      router.push("/generatepremium");
+    } else {
+      router.push("/services");
+    }
   };
 
   const createCheckoutSession = async (priceId) => {
@@ -46,6 +74,7 @@ export default function Services() {
         body: JSON.stringify({
           priceId,
           referrer: window.location.href,  // Capture the current URL and pass it as the referrer
+          userId: user.id, // Pass the Clerk user ID
         }),
       });
   
@@ -65,10 +94,15 @@ export default function Services() {
     }
   };
   
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user?.id) {
+      checkPremiumStatus(user.id); // Call the API when the user is signed in
+    }
+  }, [isLoaded, isSignedIn, user]);
+  
 
   return (
     <Box>
-      <ClerkProvider>
       <AppBar position="static" color="primary" elevation={4} sx={{ backgroundColor: "#2B2D42" }}>
         <Toolbar>
           <Typography
@@ -84,6 +118,15 @@ export default function Services() {
           >
             Recovery AI
           </Typography>
+          {isSignedIn && (
+            <Button
+              color="inherit"
+              sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
+              onClick={goPremiumPage}
+            >
+              Generate Premium
+            </Button>
+          )}
           <Button
             color="inherit"
             sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
@@ -133,7 +176,6 @@ export default function Services() {
           </SignedIn>
         </Toolbar>
       </AppBar>
-    </ClerkProvider>
 
       {/* Service Options Section */}
       <Box sx={{ backgroundColor: "white", py: 8 }}>
@@ -195,7 +237,7 @@ export default function Services() {
                       fontWeight: "bold",
                     }}
                     onClick={() =>
-                      createCheckoutSession("price_1Puni2L4uTCp4HsU5Yy8NzLr")
+                      createCheckoutSession("price_1PvXtlL4uTCp4HsU4SVb4waA")
                     }
                   >
                     Choose Basic Bundle
@@ -245,7 +287,7 @@ export default function Services() {
                       fontWeight: "bold",
                     }}
                     onClick={() =>
-                      createCheckoutSession("price_1PuoF1L4uTCp4HsUVdi0CUv0")
+                      createCheckoutSession("price_1PvXu7L4uTCp4HsUERiXqEuo")
                     }
                   >
                     Choose Premium Bundle

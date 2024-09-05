@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -15,6 +15,9 @@ import {
 } from "@mui/material";
 import { Instagram, Facebook, Twitter } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+import { Folder } from "@mui/icons-material";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 import {
   ClerkProvider,
@@ -22,17 +25,35 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
+  useUser,
 } from "@clerk/nextjs";
 
 export default function Home() {
   const router = useRouter();
+  const { isLoaded, isSignedIn, user } = useUser();
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [processedImageUrl, setProcessedImageUrl] = useState(null);
+  const [processedImages, setProcessedImages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const goHome = () => {
-    router.push("/");
-  };
+
+  useEffect(() => {
+    if (isLoaded) {
+      // If the user is not signed in, redirect to sign-in page
+      if (!isSignedIn) {
+        router.push("/sign-in");
+      } else if (!user.publicMetadata.hasPaid) {
+        // If the user is signed in but hasn't paid, redirect to the payment page
+        router.push("/services");
+      } else {
+        // If the user is signed in and has paid, allow access to the page
+        setLoading(false);
+      }
+    }
+  }, [isLoaded, isSignedIn, user, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const goServices = () => {
     router.push("/services");
@@ -42,31 +63,52 @@ export default function Home() {
     router.push("/about");
   };
 
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setUploadedImage(URL.createObjectURL(file));
-      await processImage(file);
-    }
+  const goHome = () => {
+    router.push("/");
   };
 
-  const handleFileInputChange = async (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setUploadedImage(URL.createObjectURL(file));
-      await processImage(file);
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    if (imageFiles.length > 0) {
+      for (const file of imageFiles) {
+        const imageUrl = URL.createObjectURL(file);
+        setUploadedImage(imageUrl); // Optionally store the first uploaded image URL
+        await processImage(file);
+      }
     }
   };
+  const handleFileInputChange = async (e) => {
+    const files = Array.from(e.target.files); // Get all files from the folder
+    const imageFiles = files.filter((file) => file.type.startsWith("image/")); // Filter only image files
+  
+    if (imageFiles.length > 0) {
+      for (const file of imageFiles) {
+        const imageUrl = URL.createObjectURL(file);
+        setUploadedImage(imageUrl); // Optionally store the first uploaded image URL
+        await processImage(file); // Process each image file
+      }
+    }
+  };
+  <input
+  type="file"
+  id="fileInput"
+  style={{ display: "none" }}
+  onChange={handleFileInputChange}
+  accept="image/*"
+  webkitdirectory="true" // Enable folder selection
+  multiple
+/>
+
 
   const processImage = async (file) => {
     setLoading(true);
 
     try {
-      // Convert file to base64
       const base64Image = await fileToBase64(file);
 
-      // Upload the image to Cloudinary via your API route
       const uploadResponse = await fetch("/api/upload", {
         method: "POST",
         headers: {
@@ -76,14 +118,12 @@ export default function Home() {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error("Failed to upload image via server");
+        throw new Error("Failed to upload image");
       }
 
       const uploadData = await uploadResponse.json();
-      const publicImageUrl = uploadData.url; // The URL of the uploaded image
-      console.log("Uploaded image to Cloudinary:", publicImageUrl);
+      const publicImageUrl = uploadData.url;
 
-      // Send the public URL to your backend to process it with Replicate API
       const replicateResponse = await fetch("/api/replicate", {
         method: "POST",
         headers: {
@@ -93,13 +133,12 @@ export default function Home() {
       });
 
       if (!replicateResponse.ok) {
-        throw new Error("Failed to process the image via Replicate API");
+        throw new Error("Failed to process image via Replicate API");
       }
 
       const replicateData = await replicateResponse.json();
-      console.log("Processed image with Replicate:", replicateData.output);
 
-      setProcessedImageUrl(replicateData.output); // Set the processed image URL
+      setProcessedImages((prevImages) => [...prevImages, replicateData.output]); // Append new processed image URL
     } catch (error) {
       console.error("Error:", error.message);
     } finally {
@@ -116,29 +155,25 @@ export default function Home() {
     });
   };
 
-  const handleDownload = async () => {
+  const handleDownloadAll = async () => {
+    const zip = new JSZip();
+
     try {
-      const response = await fetch(processedImageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      for (const [index, imageUrl] of processedImages.entries()) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        zip.file(`processed-image-${index + 1}.png`, blob);
+      }
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "processed-image.png";
-      document.body.appendChild(link);
-      link.click();
-
-      // Clean up and remove the link
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, "processed-images.zip");
     } catch (error) {
-      console.error("Failed to download image:", error);
+      console.error("Failed to download images:", error);
     }
   };
 
   return (
     <Box>
-      <ClerkProvider>
       <AppBar position="static" color="primary" elevation={4} sx={{ backgroundColor: "#2B2D42" }}>
         <Toolbar>
           <Typography
@@ -204,27 +239,17 @@ export default function Home() {
           </SignedIn>
         </Toolbar>
       </AppBar>
-    </ClerkProvider>
 
       {/* First section - White background */}
       <Box sx={{ backgroundColor: "white", py: 8 }}>
         <Container maxWidth="lg">
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
-              <Typography
-                variant="h2"
-                component="h1"
-                gutterBottom
-                sx={{ fontWeight: "bold", color: "#333" }}
-              >
+              <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: "bold", color: "#333" }}>
                 Image Recovery with AI
               </Typography>
-              <Typography
-                variant="body1"
-                paragraph
-                sx={{ color: "#666", mb: 4 }}
-              >
-                Drop an image or folder here, and our AI will enhance the image(s) it for you.
+              <Typography variant="body1" paragraph sx={{ color: "#666", mb: 4 }}>
+                Drop an image or select several images and import here, and our AI will enhance the image(s) for you.
               </Typography>
 
               <Box
@@ -241,13 +266,9 @@ export default function Home() {
                 onClick={() => document.getElementById("fileInput").click()}
               >
                 {uploadedImage ? (
-                  <img
-                    src={uploadedImage}
-                    alt="Uploaded"
-                    style={{ maxWidth: "100%" }}
-                  />
+                  <img src={uploadedImage} alt="Uploaded" style={{ maxWidth: "100%" }} />
                 ) : (
-                  "Drag & drop an image here, or click to select a file"
+                  "Drag & drop images here, or click to select files"
                 )}
               </Box>
 
@@ -257,6 +278,7 @@ export default function Home() {
                 style={{ display: "none" }}
                 onChange={handleFileInputChange}
                 accept="image/*"
+                multiple
               />
             </Grid>
 
@@ -266,26 +288,26 @@ export default function Home() {
                   Processing...
                 </Typography>
               ) : (
-                processedImageUrl && (
-                  <Box>
-                    <Card elevation={8}>
-                      <CardMedia
-                        component="img"
-                        height="520"
-                        image={processedImageUrl}
-                        alt="Processed Image"
-                        sx={{ objectFit: "cover" }}
-                      />
-                    </Card>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                      <Button
-                        variant="contained"
-                        color="#2B2D42"
-                        onClick={handleDownload}
-                      >
-                        Download Processed Image
-                      </Button>
-                    </Box>
+                processedImages.length > 0 && (
+                  <Box sx={{ textAlign: "center", mt: 4 }}>
+                    <IconButton onClick={handleDownloadAll}>
+    <Folder
+      sx={{
+        fontSize: 80, // Larger size for the icon
+        color: "#2B2D42", // Matching the dark blue color of the theme
+        backgroundColor: "#F9F9F9", // Lighter background for contrast
+        borderRadius: "12px", // Rounded edges for smoother look
+        padding: "10px", // Add some padding
+        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.15)", // Subtle shadow for depth
+        "&:hover": {
+          backgroundColor: "#E0E0E0", // Light gray background on hover for better contrast
+          transform: "scale(1.1)", // Slight scale up on hover
+        },
+        transition: "all 0.3s ease", // Smooth transition for hover effect
+      }}
+    />
+  </IconButton>
+                    <Typography variant="body2">Download Processed Images</Typography>
                   </Box>
                 )
               )}

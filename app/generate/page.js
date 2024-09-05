@@ -138,7 +138,6 @@ export default function Home() {
 
   return (
     <Box>
-      <ClerkProvider>
       <AppBar position="static" color="primary" elevation={4} sx={{ backgroundColor: "#2B2D42" }}>
         <Toolbar>
           <Typography
@@ -204,7 +203,6 @@ export default function Home() {
           </SignedIn>
         </Toolbar>
       </AppBar>
-    </ClerkProvider>
 
       {/* First section - White background */}
       <Box sx={{ backgroundColor: "white", py: 8 }}>
