@@ -41,7 +41,7 @@ export default function Home() {
       // If the user is not signed in, redirect to sign-in page
       if (!isSignedIn) {
         router.push("/sign-in");
-      } else if (!user.publicMetadata.hasPaid) {
+      } else if (!user.publicMetadata?.hasPremiumAccess) {
         // If the user is signed in but hasn't paid, redirect to the payment page
         router.push("/services");
       } else {

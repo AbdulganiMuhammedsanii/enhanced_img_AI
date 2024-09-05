@@ -1,48 +1,45 @@
-import { buffer } from "micro";
-import Stripe from "stripe";
-import { clerkClient } from "@clerk/nextjs/server";
+import Stripe from 'stripe';
+import { NextResponse } from 'next/server';
+import { clerkClient } from '@clerk/nextjs/server'; // To update Clerk metadata
 
-// Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export const config = {
-  api: {
-    bodyParser: false, // Stripe requires the raw body to validate the webhook signature
-  },
-};
-
+// Only allow POST requests for this route
 export async function POST(req) {
-  const buf = await buffer(req);
-  const sig = req.headers.get("stripe-signature");
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-
   try {
-    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
-  } catch (err) {
-    console.error(`⚠️  Webhook signature verification failed.`, err.message);
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
-  }
+    const sig = req.headers.get('stripe-signature'); // Get the signature header
 
-  // Handle the checkout session completed event
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+    // Read the raw request body for Stripe's signature verification
+    const rawBody = await req.text();
 
-    // Fetch the user ID from session metadata (set during checkout session creation)
-    const userId = session.metadata.userId;
+    // Validate the event with Stripe
+    const event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
 
-    if (userId) {
-      // Update the Clerk user's metadata to indicate that they have premium access
+    // Handle the event type
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+
+      // Get the Clerk user ID from metadata
+      const userId = session.metadata.userId;
+
+      // Update Clerk user's metadata to reflect premium access
       await clerkClient.users.updateUser(userId, {
         publicMetadata: {
           hasPremiumAccess: true,
         },
       });
 
-      console.log(`✅ Premium access granted to user: ${userId}`);
+      console.log(`User ${userId} has been granted premium access.`);
     }
-  }
 
-  return new Response(JSON.stringify({ received: true }), { status: 200 });
+    return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
+  } catch (error) {
+    console.error('Error handling Stripe webhook:', error);
+    return new NextResponse('Webhook Error', { status: 400 });
+  }
+}
+
+// Return 405 (Method Not Allowed) for GET requests
+export function GET() {
+  return new NextResponse('Method Not Allowed', { status: 405 });
 }

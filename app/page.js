@@ -56,17 +56,18 @@ const processedImageUrl =
 
   
   const checkPremiumStatus = async (userId) => {
+    console.log("YIPPIE")
     try {
-      const response = await fetch("/api/check-premium-status", {
-        method: "POST",
+      const response = await fetch(`/api/check-premium-status?userId=${userId}`, {
+        method: "GET", // Use GET method
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId }),  // Send the user ID
       });
 
       const data = await response.json();
-      setHasPremiumAccess(data.hasPremiumAccess); // Update the state with the response
+      console.log("EYEEEE", data.hasPremiumAccess)
+      setHasPremiumAccess(data.hasPremiumAccess); // Update state based on API response
     } catch (error) {
       console.error("Error checking premium status:", error);
     }

@@ -4,7 +4,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const { priceId, referrer, userId  } = await req.json();  // Add referrer to the body
+    const { priceId, referrer, userId } = await req.json();  // Add referrer and userId to the body
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -21,6 +21,7 @@ export async function POST(req) {
         userId,  // Include the Clerk user ID in the metadata
       },
     });
+
     console.log("Metadata being sent to Stripe:", { userId, referrer });
 
     return new Response(JSON.stringify({ id: session.id }), {

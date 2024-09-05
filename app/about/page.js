@@ -41,7 +41,7 @@ export default function About() {
 
   const goPremiumPage = () => {
     if (hasPremiumAccess) {
-      router.push("/premium/generate");
+      router.push("/generatepremium");
     } else {
       router.push("/services");
     }
