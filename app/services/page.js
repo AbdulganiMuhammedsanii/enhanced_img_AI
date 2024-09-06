@@ -11,7 +11,12 @@ import {
   IconButton,
   Grid,
   Box,
-  ButtonBase
+  ButtonBase,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from "@mui/material";
 import { Instagram, Facebook, Twitter } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -30,11 +35,12 @@ export default function Services() {
   const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser(); // Fetch user details
   const [hasPremiumAccess, setHasPremiumAccess] = useState(false); // Initialize the state
-
+  const [openModal, setOpenModal] = useState(false); // Modal state
 
   const goHome = () => {
     router.push("/");
   };
+
   const checkPremiumStatus = async (userId) => {
     console.log("YIPPIE")
     try {
@@ -52,7 +58,7 @@ export default function Services() {
       console.error("Error checking premium status:", error);
     }
   };
-  
+
   const goAbout = () => {
     router.push("/about");
   };
@@ -66,6 +72,11 @@ export default function Services() {
   };
 
   const createCheckoutSession = async (priceId) => {
+    if (!isSignedIn) {
+      setOpenModal(true); // Open modal if the user is not signed in
+      return;
+    }
+
     try {
       const response = await fetch("/api/checkout-session", {
         method: "POST",
@@ -78,14 +89,14 @@ export default function Services() {
           userId: user.id, // Pass the Clerk user ID
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (data.error) {
         console.error("Error creating checkout session:", data.error);
         return;
       }
-  
+
       // Use the getStripe function to load the Stripe instance
       const stripe = await getStripe();
       // Redirect to Stripe Checkout
@@ -94,20 +105,22 @@ export default function Services() {
       console.error("Failed to create checkout session:", err);
     }
   };
-  
+
   useEffect(() => {
     if (isLoaded && isSignedIn && user?.id) {
       checkPremiumStatus(user.id); // Call the API when the user is signed in
+      if (hasPremiumAccess) {
+        router.push("/generatepremium");
+      }
     }
   }, [isLoaded, isSignedIn, user]);
-  
 
   return (
     <Box>
       <AppBar position="static" color="primary" elevation={4} sx={{ backgroundColor: "#2B2D42" }}>
         <Toolbar>
           <Typography
-          onClick={goHome}
+            onClick={goHome}
             variant="h6"
             sx={{
               flexGrow: 1,
@@ -144,26 +157,26 @@ export default function Services() {
 
           {/* Clerk Authentication UI */}
           <SignedOut>
-  <SignInButton>
-    <Button
-      color="inherit"
-      sx={{
-        mx: 1,
-        color: "white",
-        border: "1px solid white", // Border for better visibility
-        borderRadius: "20px", // Rounded corners
-        px: 2, // Padding for extra space inside the button
-        textTransform: "none", // Disable uppercase text transformation
-        "&:hover": {
-          color: "#848080", // Slightly darker color on hover
-          borderColor: "#848080", // Match border color on hover
-        },
-      }}
-    >
-      Sign In/Up
-    </Button>
-  </SignInButton>
-</SignedOut>
+            <SignInButton>
+              <Button
+                color="inherit"
+                sx={{
+                  mx: 1,
+                  color: "white",
+                  border: "1px solid white", // Border for better visibility
+                  borderRadius: "20px", // Rounded corners
+                  px: 2, // Padding for extra space inside the button
+                  textTransform: "none", // Disable uppercase text transformation
+                  "&:hover": {
+                    color: "#848080", // Slightly darker color on hover
+                    borderColor: "#848080", // Match border color on hover
+                  },
+                }}
+              >
+                Sign In/Up
+              </Button>
+            </SignInButton>
+          </SignedOut>
 
           <SignedIn>
             <UserButton
@@ -225,7 +238,6 @@ export default function Services() {
                     sx={{ color: "#666", textAlign: "center", mt: 2 }}
                   >
                     Up to 50 image generations in a compressed folder
-
                   </Typography>
                   <Button
                     variant="contained"
@@ -237,9 +249,7 @@ export default function Services() {
                       textTransform: "none",
                       fontWeight: "bold",
                     }}
-                    onClick={() =>
-                      createCheckoutSession("price_1PvXtlL4uTCp4HsU4SVb4waA")
-                    }
+                    onClick={() => createCheckoutSession("price_1PvXtlL4uTCp4HsU4SVb4waA")}
                   >
                     Choose Basic Bundle
                   </Button>
@@ -274,8 +284,7 @@ export default function Services() {
                     variant="body1"
                     sx={{ color: "#666", textAlign: "center", mt: 2 }}
                   >
-                    Up to 250 image generations in a compressed folder
-
+                    Lifetime unlimited image generations in a compressed folder
                   </Typography>
                   <Button
                     variant="contained"
@@ -287,9 +296,7 @@ export default function Services() {
                       textTransform: "none",
                       fontWeight: "bold",
                     }}
-                    onClick={() =>
-                      createCheckoutSession("price_1PvXu7L4uTCp4HsUERiXqEuo")
-                    }
+                    onClick={() => createCheckoutSession("price_1PvXu7L4uTCp4HsUERiXqEuo")}
                   >
                     Choose Premium Bundle
                   </Button>
@@ -299,6 +306,27 @@ export default function Services() {
           </Grid>
         </Container>
       </Box>
+
+      {/* Modal for Sign In Alert */}
+      <Dialog
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+      >
+        <DialogTitle>{"Sign In Required"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Please sign in to continue with your purchase.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenModal(false)} color="primary">
+            Cancel
+          </Button>
+          <SignInButton>
+            <Button color="primary">Sign In</Button>
+          </SignInButton>
+        </DialogActions>
+      </Dialog>
 
       {/* Footer Section */}
       <Box sx={{ backgroundColor: "#2B2D42", py: 8, color: "white" }}>
