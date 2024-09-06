@@ -13,6 +13,7 @@ import {
   Grid,
   Box,
   CardMedia,
+  CircularProgress,
 } from "@mui/material";
 import { Instagram, Facebook, Twitter } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -31,8 +32,8 @@ export default function Home() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [processedImageUrl, setProcessedImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const {isSignedIn } = useUser();
-
+  const [error, setError] = useState(null);
+  const { isSignedIn } = useUser();
 
   const goHome = () => {
     router.push("/");
@@ -50,62 +51,52 @@ export default function Home() {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) {
-      setUploadedImage(URL.createObjectURL(file));
-      await processImage(file);
+      await handleImageUpload(file);
     }
   };
 
   const handleFileInputChange = async (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
-      setUploadedImage(URL.createObjectURL(file));
-      await processImage(file);
+      await handleImageUpload(file);
     }
   };
 
-  const processImage = async (file) => {
+  const handleImageUpload = async (file) => {
+    setError(null);
     setLoading(true);
+    setUploadedImage(URL.createObjectURL(file));
 
     try {
-      // Convert file to base64
       const base64Image = await fileToBase64(file);
-
-      // Upload the image to Cloudinary via your API route
+      
+      // Upload to Cloudinary
       const uploadResponse = await fetch("/api/upload", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: base64Image }),
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload image via server");
-      }
-
+      if (!uploadResponse.ok) throw new Error("Failed to upload image");
+      
       const uploadData = await uploadResponse.json();
-      const publicImageUrl = uploadData.url; // The URL of the uploaded image
-      console.log("Uploaded image to Cloudinary:", publicImageUrl);
+      console.log("Uploaded image to Cloudinary:", uploadData.url);
 
-      // Send the public URL to your backend to process it with Replicate API
+      // Process with Replicate
       const replicateResponse = await fetch("/api/replicate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ imgCurr: publicImageUrl }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imgCurr: uploadData.url }),
       });
 
-      if (!replicateResponse.ok) {
-        throw new Error("Failed to process the image via Replicate API");
-      }
-
+      if (!replicateResponse.ok) throw new Error("Failed to process image");
+      
       const replicateData = await replicateResponse.json();
       console.log("Processed image with Replicate:", replicateData.output);
-      console.log("output", replicateData.output)
-      setProcessedImageUrl(replicateData.output); // Set the processed image URL
+      setProcessedImageUrl(replicateData.output);
     } catch (error) {
       console.error("Error:", error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -119,10 +110,9 @@ export default function Home() {
       reader.onerror = (error) => reject(error);
     });
   };
-  
 
   const goPremiumPage = () => {
-      router.push("/generatepremium");    
+    router.push("/generatepremium");    
   };
 
   const handleDownload = async () => {
@@ -136,12 +126,11 @@ export default function Home() {
       link.download = "processed-image.png";
       document.body.appendChild(link);
       link.click();
-
-      // Clean up and remove the link
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Failed to download image:", error);
+      setError("Failed to download image");
     }
   };
 
@@ -227,19 +216,10 @@ export default function Home() {
         <Container maxWidth="lg">
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
-              <Typography
-                variant="h2"
-                component="h1"
-                gutterBottom
-                sx={{ fontWeight: "bold", color: "#333" }}
-              >
+              <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: "bold", color: "#333" }}>
                 Image Recovery with AI
               </Typography>
-              <Typography
-                variant="body1"
-                paragraph
-                sx={{ color: "#666", mb: 4 }}
-              >
+              <Typography variant="body1" paragraph sx={{ color: "#666", mb: 4 }}>
                 Drop an image here, and our AI will enhance it for you.
               </Typography>
 
@@ -251,6 +231,10 @@ export default function Home() {
                   textAlign: "center",
                   backgroundColor: "#f9f9f9",
                   cursor: "pointer",
+                  minHeight: "200px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
@@ -260,7 +244,9 @@ export default function Home() {
                   <Image
                     src={uploadedImage}
                     alt="Uploaded"
-                    style={{ maxWidth: "100%" }}
+                    width={300}
+                    height={200}
+                    style={{ maxWidth: "100%", height: "auto", objectFit: "contain" }}
                   />
                 ) : (
                   "Drag & drop an image here, or click to select a file"
@@ -278,32 +264,37 @@ export default function Home() {
 
             <Grid item xs={12} md={6}>
               {loading ? (
-                <Typography variant="h5" color="primary">
-                  Processing...
+                <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                  <CircularProgress />
+                </Box>
+              ) : error ? (
+                <Typography variant="h6" color="error" align="center">
+                  {error}
                 </Typography>
-              ) : (
-                processedImageUrl && (
-                  <Box>
-                    <Card elevation={8}>
-                      <CardMedia
-                        component="img"
-                        height="520"
-                        image={processedImageUrl}
-                        alt="Processed Image"
-                        sx={{ objectFit: "cover" }}
-                      />
-                    </Card>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                      <Button
-                        variant="contained"
-                        color="#2B2D42"
-                        onClick={handleDownload}
-                      >
-                        Download Processed Image
-                      </Button>
-                    </Box>
+              ) : processedImageUrl ? (
+                <Box>
+                  <Card elevation={8}>
+                    <CardMedia
+                      component="img"
+                      image={processedImageUrl}
+                      alt="Processed Image"
+                      sx={{ width: "100%", height: "auto", maxHeight: "500px", objectFit: "contain" }}
+                    />
+                  </Card>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleDownload}
+                      sx={{ backgroundColor: "#2B2D42", "&:hover": { backgroundColor: "#1A1B2B" } }}
+                    >
+                      Download Processed Image
+                    </Button>
                   </Box>
-                )
+                </Box>
+              ) : (
+                <Typography variant="body1" align="center">
+                  Processed image will appear here
+                </Typography>
               )}
             </Grid>
           </Grid>
