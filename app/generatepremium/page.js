@@ -51,9 +51,6 @@ export default function Home() {
     }
   }, [isLoaded, isSignedIn, user, router]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   const goServices = () => {
     router.push("/services");
@@ -189,6 +186,14 @@ export default function Home() {
           >
             Recovery AI
           </Typography>
+          {isSignedIn && (
+            <Button
+              color="inherit"
+              sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
+            >
+              Generate Premium
+            </Button>
+          )}
           <Button
             onClick = {goServices}
             color="inherit"

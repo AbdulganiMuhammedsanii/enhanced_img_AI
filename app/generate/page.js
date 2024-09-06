@@ -22,6 +22,7 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
+  useUser,
 } from "@clerk/nextjs";
 
 export default function Home() {
@@ -29,6 +30,8 @@ export default function Home() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [processedImageUrl, setProcessedImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+  const {isSignedIn } = useUser();
+
 
   const goHome = () => {
     router.push("/");
@@ -98,7 +101,7 @@ export default function Home() {
 
       const replicateData = await replicateResponse.json();
       console.log("Processed image with Replicate:", replicateData.output);
-
+      console.log("output", replicateData.output)
       setProcessedImageUrl(replicateData.output); // Set the processed image URL
     } catch (error) {
       console.error("Error:", error.message);
@@ -114,6 +117,11 @@ export default function Home() {
       reader.onload = () => resolve(reader.result);
       reader.onerror = (error) => reject(error);
     });
+  };
+  
+
+  const goPremiumPage = () => {
+      router.push("/generatepremium");    
   };
 
   const handleDownload = async () => {
@@ -153,6 +161,15 @@ export default function Home() {
           >
             Recovery AI
           </Typography>
+          {isSignedIn && (
+            <Button
+              onClick={goPremiumPage}
+              color="inherit"
+              sx={{ mx: 1, color: "white", "&:hover": { color: "lightgray" } }}
+            >
+              Generate Premium
+            </Button>
+          )}
           <Button
             onClick = {goServices}
             color="inherit"

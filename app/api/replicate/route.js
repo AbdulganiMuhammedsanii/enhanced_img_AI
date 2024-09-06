@@ -13,13 +13,12 @@ export async function POST(req) {
 
     // Call the Replicate API with the image URL
     const input = {
-      img: imgCurr,
+      image: imgCurr,
+      codeformer_fidelity: 0.1
   };
-    const output = await replicate.run(
-      "tencentarc/gfpgan:0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
-      { input } // Ensure this is a number
-    );
-
+  
+  const output = await replicate.run("sczhou/codeformer:7de2ea26c616d5bf2245ad0d5e24f0ff9a6204578a5c876db53142edd9d2cd56", { input });
+    console.log("yooooo", input)
     console.log("Replicate API output:", output);
 
     // Return a new Response object with the output
