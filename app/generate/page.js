@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React, { useState } from "react";
 import {
   AppBar,
@@ -256,7 +257,7 @@ export default function Home() {
                 onClick={() => document.getElementById("fileInput").click()}
               >
                 {uploadedImage ? (
-                  <img
+                  <Image
                     src={uploadedImage}
                     alt="Uploaded"
                     style={{ maxWidth: "100%" }}

@@ -113,7 +113,7 @@ export default function Services() {
         router.push("/generatepremium");
       }
     }
-  }, [isLoaded, isSignedIn, user]);
+  }, [hasPremiumAccess, router, isLoaded, isSignedIn, user]);
 
   return (
     <Box>

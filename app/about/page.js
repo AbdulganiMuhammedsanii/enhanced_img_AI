@@ -285,7 +285,7 @@ export default function About() {
             Ready to Recover Your Images?
           </Typography>
           <Typography variant="body1" sx={{ mb: 4, lineHeight: 1.8 }}>
-            Start your journey to restore your photos today. Whether it's a
+            Start your journey to restore your photos today. Whether it is a
             single image or an entire album, Recovery AI is here to help.
           </Typography>
           <Button
