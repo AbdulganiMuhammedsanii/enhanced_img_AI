@@ -249,7 +249,7 @@ export default function Services() {
                       textTransform: "none",
                       fontWeight: "bold",
                     }}
-                    onClick={() => createCheckoutSession("price_1PvXtlL4uTCp4HsU4SVb4waA")}
+                    onClick={() => createCheckoutSession("price_1PwFpZL4uTCp4HsU1V7BKXJy")}
                   >
                     Choose Basic Bundle
                   </Button>
@@ -296,7 +296,7 @@ export default function Services() {
                       textTransform: "none",
                       fontWeight: "bold",
                     }}
-                    onClick={() => createCheckoutSession("price_1PvXu7L4uTCp4HsUERiXqEuo")}
+                    onClick={() => createCheckoutSession("price_1PwFpoL4uTCp4HsUWGzMMXEL")}
                   >
                     Choose Premium Bundle
                   </Button>
